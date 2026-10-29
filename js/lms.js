@@ -194,4 +194,186 @@
       if (event.target === backdrop) window.location.href = 'chi-tiet-tram.php';
     });
   });
+
+  document.querySelectorAll('[data-question-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.questionFilter;
+      document.querySelectorAll('[data-question-filter]').forEach((item) => item.classList.toggle('active', item === button));
+      document.querySelectorAll('.mastery-question').forEach((question) => {
+        question.hidden = filter === 'challenge' && question.dataset.questionType !== 'challenge';
+      });
+    });
+  });
+
+  const documentInput = document.querySelector('#document-file');
+  const dropzone = document.querySelector('#upload-dropzone');
+  const selectedFile = document.querySelector('#selected-file');
+  const uploadFeedback = document.querySelector('#upload-feedback');
+  let validDocument = null;
+  const showUploadFeedback = (message, isError = false) => {
+    if (!uploadFeedback) return;
+    uploadFeedback.hidden = false;
+    uploadFeedback.textContent = message;
+    uploadFeedback.classList.toggle('error', isError);
+  };
+  const displayDocument = (file) => {
+    if (!file || !selectedFile) return;
+    const extension = file.name.split('.').pop().toLowerCase();
+    const supported = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'];
+    if (!supported.includes(extension)) {
+      validDocument = null;
+      selectedFile.hidden = true;
+      showUploadFeedback('Định dạng tệp chưa được hỗ trợ. Vui lòng chọn PDF, DOC, DOCX, PPT, PPTX hoặc TXT.', true);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      validDocument = null;
+      selectedFile.hidden = true;
+      showUploadFeedback('Tệp vượt quá giới hạn 20 MB. Vui lòng chọn tài liệu có dung lượng nhỏ hơn.', true);
+      return;
+    }
+    validDocument = file;
+    selectedFile.hidden = false;
+    selectedFile.textContent = `✓ ${file.name} · ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+    if (uploadFeedback) uploadFeedback.hidden = true;
+  };
+  if (documentInput && dropzone) {
+    document.querySelector('#choose-document')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      documentInput.click();
+    });
+    documentInput.addEventListener('change', () => displayDocument(documentInput.files[0]));
+    dropzone.addEventListener('click', (event) => {
+      if (event.target.closest('button')) return;
+      documentInput.click();
+    });
+    dropzone.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        documentInput.click();
+      }
+    });
+    ['dragenter', 'dragover'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.add('drag-over');
+    }));
+    ['dragleave', 'drop'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('drag-over');
+    }));
+    dropzone.addEventListener('drop', (event) => {
+      const file = event.dataTransfer?.files[0];
+      if (file) displayDocument(file);
+    });
+  }
+  document.querySelector('#document-upload-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const title = document.querySelector('#document-title');
+    const course = document.querySelector('#document-course');
+    if (!validDocument) {
+      showUploadFeedback('Vui lòng chọn một tệp tài liệu hợp lệ trước khi bắt đầu phân tích.', true);
+      dropzone?.focus();
+      return;
+    }
+    if (!title.value.trim() || !course.value) {
+      showUploadFeedback('Vui lòng nhập tên tài liệu và chọn môn học tương ứng.', true);
+      return;
+    }
+    showUploadFeedback(`Tệp “${validDocument.name}” đã được kiểm tra trên trình duyệt. Đây là bản demo giao diện; chưa tải tệp lên máy chủ.`);
+  });
+  document.querySelector('#document-upload-form')?.addEventListener('reset', () => {
+    validDocument = null;
+    if (documentInput) documentInput.value = '';
+    if (selectedFile) selectedFile.hidden = true;
+    if (uploadFeedback) uploadFeedback.hidden = true;
+  });
+  document.querySelectorAll('[data-document-action]').forEach((button) => {
+    button.addEventListener('click', () => showToast(`${button.dataset.documentAction}: tính năng tài liệu đang ở chế độ bản demo.`));
+  });
+
+  document.querySelectorAll('[data-transaction-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.transactionTab;
+      if (target === 'assessment') {
+        showToast('Hoàn thành các bước học tập để mở bài đánh giá Trạm 2.4.');
+        return;
+      }
+      document.querySelectorAll('.transaction-tabs [data-transaction-tab]').forEach((item) => item.classList.toggle('selected', item.dataset.transactionTab === target));
+      document.querySelector(target === 'simulator' ? '#simulator' : '#roadmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  const simulationMessage = document.querySelector('.simulation-message');
+  const simulationStatus = document.querySelector('.lock-status');
+  const simulationDescription = document.querySelector('.lock-state > div');
+  const showSimulationMessage = (message) => {
+    if (!simulationMessage) return;
+    simulationMessage.hidden = false;
+    simulationMessage.textContent = message;
+  };
+  document.querySelector('[data-run-simulation]')?.addEventListener('click', () => {
+    document.querySelector('.session-panel.session-b')?.classList.add('transaction-waiting');
+    if (simulationStatus) simulationStatus.textContent = '● Session B đang chờ khóa được giải phóng';
+    showSimulationMessage('Mô phỏng hoàn tất: T1 giữ X-Lock trên Row #42; T2 chờ cho đến khi T1 COMMIT.');
+  });
+  document.querySelector('[data-inject-deadlock]')?.addEventListener('click', () => {
+    document.querySelector('.transaction-sessions')?.classList.add('deadlock-detected');
+    if (simulationStatus) simulationStatus.textContent = '⚠ Deadlock phát hiện: Wait-For Graph có chu trình';
+    if (simulationDescription) simulationDescription.textContent = 'Deadlock: T1 chờ tài nguyên của T2 · T2 chờ tài nguyên của T1';
+    showSimulationMessage('Deadlock được phát hiện trong sandbox mô phỏng. PostgreSQL sẽ chọn một transaction làm nạn nhân và rollback để phá chu trình.');
+  });
+  document.querySelector('[data-reset-simulation]')?.addEventListener('click', () => {
+    document.querySelector('.transaction-sessions')?.classList.remove('deadlock-detected');
+    document.querySelector('.session-panel.session-b')?.classList.remove('transaction-waiting');
+    if (simulationStatus) simulationStatus.textContent = '● Wait-For Graph: Không phát hiện chu trình Deadlock (No cycle)';
+    if (simulationDescription) simulationDescription.textContent = 'Lock(Row#42, Mode: Exclusive, Holder: Tx10482, Waiters: [Tx10483])';
+    if (simulationMessage) simulationMessage.hidden = true;
+  });
+  document.querySelector('[data-jump-simulator]')?.addEventListener('click', () => document.querySelector('#simulator')?.scrollIntoView({ behavior: 'smooth' }));
+  document.querySelector('[data-start-module]')?.addEventListener('click', () => {
+    document.querySelector('#roadmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast('Bắt đầu học Trạm 2.4: hoàn thành 5 bước để mở bài đánh giá.');
+  });
+  document.querySelector('[data-step-start]')?.addEventListener('click', (event) => {
+    event.currentTarget.closest('.micro-step')?.classList.add('step-in-progress');
+    const progress = document.querySelector('#step-progress');
+    if (progress) progress.textContent = '1 / 5';
+    event.currentTarget.textContent = 'Đang học';
+    event.currentTarget.disabled = true;
+    showToast('Bài học về ACID và Write-Ahead Logging đã bắt đầu.');
+  });
+  document.querySelectorAll('[data-mentor-question]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const message = document.querySelector('.mentor-message');
+      if (message) message.textContent = `Câu hỏi của bạn: ${button.textContent.trim()} Hãy bắt đầu bằng cách phân tích hiện tượng tranh chấp tài nguyên và mức độ cô lập đang được sử dụng.`;
+    });
+  });
+  document.querySelector('[data-mentor-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const input = event.currentTarget.querySelector('input');
+    if (!input.value.trim()) {
+      input.focus();
+      return;
+    }
+    const message = document.querySelector('.mentor-message');
+    if (message) message.textContent = `Câu hỏi của bạn: ${input.value.trim()} AI Mentor sẽ hướng dẫn bạn từng bước trong bản demo này.`;
+    input.value = '';
+  });
+
+  const logoutDialog = document.querySelector('#logout-dialog');
+  if (logoutDialog) {
+    document.querySelector('#cancel-logout')?.focus();
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') window.location.href = 'lo-trinh.php';
+      if (event.key === 'Tab') {
+        const controls = [...logoutDialog.querySelectorAll('a[href], button:not([disabled])')];
+        if (controls.length && event.shiftKey && document.activeElement === controls[0]) {
+          event.preventDefault();
+          controls[controls.length - 1].focus();
+        } else if (controls.length && !event.shiftKey && document.activeElement === controls[controls.length - 1]) {
+          event.preventDefault();
+          controls[0].focus();
+        }
+      }
+    });
+  }
 })();

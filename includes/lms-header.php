@@ -34,17 +34,17 @@ $lms_pages = [
     <button class="icon-button" type="button" aria-label="Thông báo">♧<i></i></button>
     <div class="account-menu">
       <button class="user-chip" id="account-menu-button" type="button" aria-expanded="false" aria-controls="account-menu" aria-haspopup="true">
-        <span class="avatar">NT</span>
-        <span class="user-details"><strong>Nguyễn Thùy</strong><small>Học viên</small></span>
+        <span class="avatar">DT</span>
+        <span class="user-details"><strong>Đinh Thị Thùy Trâm</strong><small>Học viên</small></span>
         <span class="account-chevron" aria-hidden="true">⌄</span>
       </button>
       <div class="account-dropdown" id="account-menu" hidden>
         <div class="account-dropdown-heading">
-          <span class="avatar">NT</span>
-          <span><strong>Nguyễn Thùy</strong><small>Học viên Cognita AI</small></span>
+          <span class="avatar">DT</span>
+          <span><strong>Đinh Thị Thùy Trâm</strong><small>Học viên Cognita AI</small></span>
         </div>
         <div class="account-dropdown-divider"></div>
-        <a class="logout-link" href="dang-nhap.php?logout=1"><span aria-hidden="true">↪</span> Đăng xuất</a>
+        <a class="logout-link" href="dang-xuat.php"><span aria-hidden="true">↪</span> Đăng xuất</a>
       </div>
     </div>
   </div>
@@ -55,7 +55,8 @@ $lms_pages = [
     <div class="side-label">LEARNING SPACE</div>
     <a class="side-link <?= $active_page === 'lo-trinh' ? 'active' : '' ?>" href="lo-trinh.php"><span>◫</span> Learning Path</a>
     <a class="side-link <?= $active_page === 'chi-tiet-tram' ? 'active' : '' ?>" href="chi-tiet-tram.php"><span>◎</span> AI Assistant <b class="online-dot">Live</b></a>
-    <a class="side-link" href="chi-tiet-tram.php"><span>▤</span> Courses &amp; Modules</a>
+    <a class="side-link <?= $active_page === 'tram-2-4' ? 'active' : '' ?>" href="tram-2-4.php"><span>▤</span> Courses &amp; Modules</a>
+    <a class="side-link <?= $active_page === 'tai-lieu' ? 'active' : '' ?>" href="tai-lieu.php"><span>▧</span> Tài liệu học tập</a>
     <a class="side-link <?= $active_page === 'ket-qua' ? 'active' : '' ?>" href="ket-qua.php"><span>⌁</span> Analytics &amp; Mastery</a>
     <a class="side-link" href="ket-qua.php#milestones"><span>⚑</span> Goals &amp; Milestones</a>
     <div class="side-help"><span class="help-icon">✧</span><strong>Cần trợ giúp?</strong><p>Gia sư AI luôn sẵn sàng đồng hành cùng bạn.</p><a href="chi-tiet-tram.php#ai-mentor">Ask AI Mentor <span>→</span></a></div>
